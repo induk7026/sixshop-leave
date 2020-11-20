@@ -1,8 +1,11 @@
 package com.sixshop.holiday.demo.holiday.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.sixshop.holiday.demo.employee.domain.Employee;
+import com.sixshop.holiday.demo.holiday.domain.request.UpdateLeaveRequest;
+import com.sixshop.holiday.demo.holiday.exception.LeaveHistoryRuntimeException;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
@@ -27,9 +30,9 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "leave_history")
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "leave_history")
 @Builder
 @Setter
 @Getter
@@ -60,8 +63,9 @@ public class LeaveHistory {
     @Column(name = "last_modified_at", updatable = true)
     private LocalDateTime lastModifiedDate;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name ="employee_id")
+    @JsonBackReference
     private Employee employee;
 
     public boolean isLeave(){
@@ -74,5 +78,27 @@ public class LeaveHistory {
     @Override
     public String toString(){
         return new ReflectionToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE).toString();
+    }
+
+    public void changeLeave(UpdateLeaveRequest updateLeaveRequest) {
+        this.deductionHours = updateLeaveRequest.getDeductionHours();
+        this.type = updateLeaveRequest.getType();
+        this.startDate = updateLeaveRequest.getStartDate();
+        this.andDate = updateLeaveRequest.getAndDate();
+    }
+
+    public void validateChangeHistory(UpdateLeaveRequest updateLeaveRequest){
+        isChangeableTime();
+
+        if(LeaveType.isNotChangeableLeaveType(updateLeaveRequest.getType())){
+            throw new LeaveHistoryRuntimeException("변경 불가능한 타입");
+        }
+    }
+
+    public void isChangeableTime() {
+        LocalDateTime localDateTime = Objects.requireNonNullElse(this.startDate, this.createdDate);
+        if(localDateTime.isBefore(LocalDateTime.now())){
+            throw new LeaveHistoryRuntimeException("휴가 변경 가능 시간 외 요청건");
+        }
     }
 }

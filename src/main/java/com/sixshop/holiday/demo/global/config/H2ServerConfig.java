@@ -1,4 +1,4 @@
-package com.sixshop.holiday.demo.config;
+package com.sixshop.holiday.demo.global.config;
 
 import com.zaxxer.hikari.HikariDataSource;
 import java.sql.SQLException;

@@ -18,9 +18,10 @@ public class EmployeeController {
     @GetMapping
     public List<Employee> findAll(){
         List<Employee> list = employeeService.findAll();
-//        list.forEach(employee -> {
-//            employee.getLeaveHistories();
-//        });
+        list.forEach(employee -> {
+            employee.getLeaveHistories();
+//            System.out.println(employee.toString());
+        });
         return list;
     }
 }

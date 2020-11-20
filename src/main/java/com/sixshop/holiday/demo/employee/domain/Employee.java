@@ -1,24 +1,18 @@
 package com.sixshop.holiday.demo.employee.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.sixshop.holiday.demo.holiday.domain.LeaveHistory;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -43,9 +37,9 @@ public class Employee {
     private LocalDateTime updatedDate;
     private LocalDateTime createdDate;
 
-    @OneToMany(mappedBy ="employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy ="employee", fetch = FetchType.LAZY)
     @JsonManagedReference
-    private List<LeaveHistory> leaveHistories = new ArrayList<>();
+    private Set<LeaveHistory> leaveHistories = new HashSet<>();
 
     @Transient
     @Column(insertable=false, updatable=false)
@@ -54,17 +48,17 @@ public class Employee {
     @Transient
     @Column(insertable=false, updatable=false)
     private double totalAnnualLeave;
-//    private double beLetOverLeaveDay;
 
-
-    public double getStatutoryAnnualLeave() {
-        Period period = Period.between(this.joiningCompanyDate, LocalDate.now()).minusYears(1);
-        return statutoryAnnualLeave =  DEFAULT_INT + (Math.floor(period.getYears())/2);
+    public double getTotalAnnualLeave() {
+        Period period = Period.between(this.joiningCompanyDate, LocalDate.now());
+        if(period.getYears() >= 4){
+            return DEFAULT_INT + Math.floor(Math.abs(period.getYears() - 1) / 2);
+        }
+        return DEFAULT_INT;
     }
 
-    public double getTotalAnnualLeave(){
-        return getStatutoryAnnualLeave() - calculate();
-
+    public double getStatutoryAnnualLeave(){
+        return getTotalAnnualLeave() - calculate();
     }
 
     public boolean checkLeave(){
@@ -75,7 +69,9 @@ public class Employee {
         return this.leaveHistories
             .stream()
             .filter(LeaveHistory::isLeave)
-            .filter(LeaveHistory::isMinus).mapToDouble(LeaveHistory::getDeductionHours).sum();
+            .filter(LeaveHistory::isMinus)
+            .mapToDouble(LeaveHistory::getDeductionHours)
+            .sum();
     }
 
     @Override

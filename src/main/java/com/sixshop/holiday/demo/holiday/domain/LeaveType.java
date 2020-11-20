@@ -21,6 +21,10 @@ public enum LeaveType {
         Arrays.asList(ANNUAL_LEAVE, AM_HALF_DAY, AM_QUARTER_DAY, PM_HALF_DAY, PM_QUARTER_DAY)
     );
 
+    public static final List<LeaveType> CHANGEABLE_LEAVE_TYPE = Collections.unmodifiableList(
+        Arrays.asList(ANNUAL_LEAVE, AM_HALF_DAY, AM_QUARTER_DAY, PM_HALF_DAY, PM_QUARTER_DAY)
+    );
+
     private String name;
     private CalculationType calculationType;
 
@@ -35,5 +39,13 @@ public enum LeaveType {
 
     public CalculationType getCalculationType() {
         return calculationType;
+    }
+
+    public static boolean isChangeableLeaveType(LeaveType leaveType){
+        return CHANGEABLE_LEAVE_TYPE.contains(leaveType);
+    }
+
+    public static boolean isNotChangeableLeaveType(LeaveType leaveType){
+        return !isChangeableLeaveType(leaveType);
     }
 }
